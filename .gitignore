@@ -1,0 +1,6 @@
+.venv/
+.env
+match_data/
+__pycache__/
+output/
+.DS_Store
