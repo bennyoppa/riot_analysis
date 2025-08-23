@@ -89,7 +89,7 @@ def read_match_info(file_name: str, puuid: str) -> Optional[Dict]:
             barons = team["objectives"]["baron"]["kills"]
 
     # get my partner, enemy and enemy partner info
-    if position is None:
+    if position is None or position not in partner_dict:
         return None
     partner_position = partner_dict[position]
     partner_champion = None
