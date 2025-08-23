@@ -19,7 +19,9 @@ def read_all_matches(files_dir: str, puuid: str) -> pd.DataFrame:
 
     df = pd.DataFrame(all_data)
     df["Day_of_Week"] = pd.to_datetime(df["Date"]).dt.day_name()
-    df["Time_Interval"] = df["Time"].apply(lambda x: int(re.search(r"\d+", x).group(0)))
+    df["Time_Interval"] = df["Time"].apply(
+        lambda x: int(m.group(0)) if (m := re.search(r"\d+", x)) else None
+    )
     return df
 
 
@@ -39,6 +41,17 @@ def read_match_info(file_name: str, puuid: str) -> Optional[Dict]:
         return None
 
     # get my info
+    team_id = None
+    position = None
+    champion = None
+    kills = None
+    deaths = None
+    assists = None
+    minions_killed = None
+    win = None
+    elder_dragons = None
+    damage_percentage = None
+
     for participant in data["info"]["participants"]:
         if participant["puuid"] == puuid:
             position = participant["teamPosition"]
@@ -51,8 +64,19 @@ def read_match_info(file_name: str, puuid: str) -> Optional[Dict]:
             team_id = participant["teamId"]
             elder_dragons = participant["challenges"]["teamElderDragonKills"]
             damage_percentage = participant["challenges"]["teamDamagePercentage"]
+    if team_id is None:
+        return None
 
     # get my team info
+    rift_herald = None
+    first_tower = None
+    towers = None
+    first_dragon = None
+    dragons = None
+    grubs = None
+    first_baron = None
+    barons = None
+
     for team in data["info"]["teams"]:
         if team["teamId"] == team_id:
             rift_herald = team["objectives"]["riftHerald"]["kills"]
@@ -65,7 +89,12 @@ def read_match_info(file_name: str, puuid: str) -> Optional[Dict]:
             barons = team["objectives"]["baron"]["kills"]
 
     # get my partner, enemy and enemy partner info
+    if position is None:
+        return None
     partner_position = partner_dict[position]
+    partner_champion = None
+    enemy_champion = None
+    enemy_partner_champion = None
 
     for participant in data["info"]["participants"]:
         if (
@@ -83,9 +112,13 @@ def read_match_info(file_name: str, puuid: str) -> Optional[Dict]:
         ):
             enemy_partner_champion = participant["championName"]
 
+    # Extract version number safely
+    version_match = re.search(r"\d+\.\d+", data["info"]["gameVersion"])
+    version = version_match.group(0) if version_match else None
+
     return {
         "Match_ID": data["metadata"]["matchId"],
-        "Version": re.search(r"\d+\.\d+", data["info"]["gameVersion"]).group(0),
+        "Version": version,
         "Date": datetime.fromtimestamp(data["info"]["gameCreation"] // 1000).strftime(
             "%Y-%m-%d"
         ),
@@ -109,7 +142,7 @@ def read_match_info(file_name: str, puuid: str) -> Optional[Dict]:
         "First_Tower": first_tower,
         "Towers": towers,
         "First_Dragon": first_dragon,
-        "Dragons": dragons - elder_dragons,
+        "Dragons": (dragons or 0) - (elder_dragons or 0),
         "Grubs": grubs,
         "First_Baron": first_baron,
         "Barons": barons,

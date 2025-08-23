@@ -3,7 +3,7 @@ import os
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import requests
 
@@ -13,10 +13,10 @@ class Riot:
     api_key: str
     puuid: str
     headers: dict
-    start_time: int = 1709211600  # 2024-03-01 12:00:00 AM
-    end_time: int = None
     window_size: int = 10
     match_data_path: str = "match_data"
+    start_time: int = 1709211600  # 2024-03-01 12:00:00 AM
+    end_time: Optional[int] = None
 
     def __post_init__(self) -> None:
         self.set_start_time()
@@ -57,13 +57,13 @@ class Riot:
     def get_time_windows(self) -> List[Tuple]:
         step = 60 * 60 * 24 * self.window_size  # 10 days
         time_windows = []
-
-        for i in range(self.start_time, self.end_time, step):
-            start = i
-            end = i + step
-            if end > self.end_time:
-                end = self.end_time
-            time_windows.append((start, end))
+        if self.end_time:
+            for i in range(self.start_time, self.end_time, step):
+                start = i
+                end = i + step
+                if end > self.end_time:
+                    end = self.end_time
+                time_windows.append((start, end))
         return time_windows
 
     def get_match_ids(self) -> List[str]:
@@ -110,3 +110,5 @@ class Riot:
                 print(f"Done!")
             else:
                 print(f"Error: {response.status_code}")
+
+            time.sleep(0.5)
