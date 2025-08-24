@@ -4,3 +4,5 @@ match_data/
 __pycache__/
 output/
 .DS_Store
+match_data_housailei/
+match_data_supergenius/
