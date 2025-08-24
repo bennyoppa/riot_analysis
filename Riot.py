@@ -105,7 +105,7 @@ class Riot:
             if response.status_code == 200:
                 print(f"Downloading {match_id}...")
                 data = response.json()
-                with open(f"match_data/{match_id}.json", "w") as f:
+                with open(f"{self.match_data_path}/{match_id}.json", "w") as f:
                     json.dump(data, f, indent=2)
                 print(f"Done!")
             else:
